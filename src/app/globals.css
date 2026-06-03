@@ -1,0 +1,126 @@
+/* Google Fonts import */
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap");
+
+@import "tailwindcss";
+
+@theme {
+  /* ── Colour System ── */
+  --color-timber-50:  #fdf8f0;
+  --color-timber-100: #f9eedb;
+  --color-timber-200: #f2d9b1;
+  --color-timber-300: #e8be80;
+  --color-timber-400: #dc9e4d;
+  --color-timber-500: #d4862a;
+  --color-timber-600: #c06e1f;
+  --color-timber-700: #9f561b;
+  --color-timber-800: #82451d;
+  --color-timber-900: #6b3a1a;
+
+  --color-forest-50:  #f0f7f0;
+  --color-forest-100: #dceedd;
+  --color-forest-200: #badcbc;
+  --color-forest-300: #8cc28f;
+  --color-forest-400: #5aa35e;
+  --color-forest-500: #3d8741;
+  --color-forest-600: #2e6b32;
+  --color-forest-700: #265529;
+  --color-forest-800: #204423;
+  --color-forest-900: #1a381e;
+
+  --color-canvas:     #0f1410;
+  --color-surface:    #161d17;
+  --color-surface-2:  #1e2920;
+  --color-surface-3:  #253028;
+  --color-border:     #2e3d30;
+  --color-border-2:   #3d5040;
+
+  --color-text-primary:   #f0ebe3;
+  --color-text-secondary: #a8b8a9;
+  --color-text-muted:     #637165;
+
+  --color-accent:     #d4862a;
+  --color-accent-dim: #9f561b;
+
+  --color-success:    #4ade80;
+  --color-warning:    #fbbf24;
+  --color-danger:     #f87171;
+  --color-info:       #60a5fa;
+
+  /* ── Typography ── */
+  --font-display: "Playfair Display", Georgia, serif;
+  --font-body:    "DM Sans", system-ui, sans-serif;
+  --font-mono:    "JetBrains Mono", monospace;
+
+  /* ── Spacing ── */
+  --spacing-sidebar: 260px;
+
+  /* ── Radius ── */
+  --radius-card: 12px;
+  --radius-btn:  8px;
+
+  /* ── Shadows ── */
+  --shadow-card: 0 1px 3px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.25);
+  --shadow-glow: 0 0 20px rgba(212,134,42,.15);
+}
+
+/* ── Base ── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  color-scheme: dark;
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-canvas);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--color-surface); }
+::-webkit-scrollbar-thumb { background: var(--color-border-2); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-text-muted); }
+
+/* ── Utility classes ── */
+.font-display { font-family: var(--font-display); }
+.font-body    { font-family: var(--font-body); }
+.font-mono    { font-family: var(--font-mono); }
+
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+
+.btn-primary {
+  background: var(--color-accent);
+  color: #fff;
+  border-radius: var(--radius-btn);
+  font-weight: 500;
+  transition: background .15s, transform .1s;
+}
+.btn-primary:hover { background: var(--color-timber-600); }
+.btn-primary:active { transform: scale(.97); }
+
+.btn-ghost {
+  background: transparent;
+  border: 1px solid var(--color-border-2);
+  color: var(--color-text-secondary);
+  border-radius: var(--radius-btn);
+  font-weight: 500;
+  transition: background .15s, border-color .15s;
+}
+.btn-ghost:hover {
+  background: var(--color-surface-2);
+  border-color: var(--color-accent);
+  color: var(--color-text-primary);
+}
