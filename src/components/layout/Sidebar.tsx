@@ -10,6 +10,7 @@ import {
   TreePine,
   Layers,
   User,
+  Settings2,
 } from "lucide-react";
 import { SPECIES } from "@/lib/data";
 
@@ -18,6 +19,7 @@ export function Sidebar() {
   const [stockOpen, setStockOpen] = useState(true);
 
   const isDashboard = pathname === "/dashboard";
+  const isStockSettings = pathname === "/dashboard/stock-settings";
   const activeSpecies = pathname.startsWith("/dashboard/stock/")
     ? pathname.split("/").pop()
     : null;
@@ -196,6 +198,34 @@ export function Sidebar() {
                 })}
               </div>
             )}
+          </div>
+
+          {/* ── Stock Settings ── */}
+          <div className="mt-3">
+            <p
+              className="px-2 py-2 text-xs font-medium uppercase tracking-widest"
+              style={{ color: "var(--color-text-muted)" }}
+            >
+              Configuration
+            </p>
+            <Link
+              href="/dashboard/stock-settings"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-150"
+              style={{
+                background: isStockSettings
+                  ? "linear-gradient(90deg, rgba(212,134,42,.18), rgba(212,134,42,.06))"
+                  : "transparent",
+                borderLeft: isStockSettings
+                  ? "2px solid var(--color-accent)"
+                  : "2px solid transparent",
+                color: isStockSettings
+                  ? "var(--color-accent)"
+                  : "var(--color-text-secondary)",
+              }}
+            >
+              <Settings2 size={16} />
+              <span className="text-sm font-medium">Stock Settings</span>
+            </Link>
           </div>
         </nav>
 

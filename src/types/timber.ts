@@ -105,3 +105,50 @@ export interface TransactionVelocityPoint {
   sales: number;
   waste: number;
 }
+
+// ─── Stock Settings ───────────────────────────────────────────────────────────
+
+/** Base catalog entry — the "product profile" record */
+export interface ProductProfile {
+  id: string;
+  name: string;         // e.g. "Jak Premium"
+  species: string;      // e.g. "Jak"
+  timberClass: TimberClass;
+  createdAt: string;    // ISO
+}
+
+/** A single physical variation row in the inventory layout */
+export interface InventoryVariation {
+  id: string;
+  productId: string;    // FK → ProductProfile.id
+  productName: string;  // denormalised for display
+  species: string;
+  timberClass: TimberClass;
+  thickness: number;    // inches, e.g. 3.00
+  /** Width in inches — only for DIMENSIONAL; undefined/null for PLANK */
+  width?: number;
+  /** Length in feet — only for Jak DIMENSIONAL */
+  lengthFt?: number;
+  currentStock: number;
+  alertThreshold: number;
+  /** Human-readable dimension string built at save time */
+  dimensionSummary: string;
+}
+
+/** Form state for the Product form */
+export interface ProductFormState {
+  id: string | null;
+  name: string;
+  species: string;
+  timberClass: TimberClass | "";
+}
+
+/** Form state for the Inventory Variation form */
+export interface VariationFormState {
+  id: string | null;
+  productId: string;
+  thickness: string;
+  width: string;
+  lengthFt: string;
+  alertThreshold: string;
+}
