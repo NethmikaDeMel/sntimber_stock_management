@@ -73,6 +73,8 @@ export interface ActionContext {
   /** Only for length-tracked items */
   lengthFt?: number;
   unit: "linear_ft" | "sq_ft" | "pieces";
+  /** UUID of the inventory_items row — required for Supabase mutations */
+  inventoryItemId?: string;
 }
 
 // ─── Dashboard ───────────────────────────────────────────────────────────────

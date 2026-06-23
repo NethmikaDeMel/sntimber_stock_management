@@ -2,31 +2,40 @@
 
 import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import type { Transaction, TransactionType } from "@/types/timber";
+import type { TransactionType } from "@/types/supabase";
 
-interface AuditLogTableProps {
-  transactions: Transaction[];
+export interface AuditRow {
+  id: string;
+  timestamp: string;
+  type: TransactionType;
+  pieces: number;
+  quantityChanged: number;   // always the raw signed value from DB
+  unit: string;
+  referenceNotes: string;
+  lengthFt?: number;
 }
 
-const PAGE_SIZE = 5;
+interface AuditLogTableProps {
+  rows: AuditRow[];
+  loading?: boolean;
+}
+
+const PAGE_SIZE = 8;
 
 function TypeBadge({ type }: { type: TransactionType }) {
-  const styles: Record<TransactionType, { bg: string; color: string; label: string }> = {
-    RESTOCK:    { bg: "rgba(74,222,128,.15)", color: "var(--color-success)", label: "Restock"    },
-    SALE:       { bg: "rgba(96,165,250,.15)", color: "var(--color-info)",    label: "Sale"       },
-    WASTE_CUT:  { bg: "rgba(248,113,113,.15)",color: "var(--color-danger)",  label: "Waste / Cut"},
-    CORRECTION: { bg: "rgba(251,191,36,.15)", color: "var(--color-warning)", label: "Correction" },
+  const map: Record<TransactionType, { bg: string; color: string; label: string }> = {
+    RESTOCK:    { bg: "rgba(74,222,128,.15)",  color: "var(--color-success)", label: "Restock"     },
+    SALE:       { bg: "rgba(96,165,250,.15)",   color: "var(--color-info)",    label: "Sale"        },
+    WASTE_CUT:  { bg: "rgba(248,113,113,.15)",  color: "var(--color-danger)",  label: "Waste / Cut" },
+    CORRECTION: { bg: "rgba(251,191,36,.15)",   color: "var(--color-warning)", label: "Correction"  },
   };
-  const s = styles[type];
+  const s = map[type];
   return (
     <span
       className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold"
       style={{ background: s.bg, color: s.color }}
     >
-      <span
-        className="w-1.5 h-1.5 rounded-full"
-        style={{ background: s.color }}
-      />
+      <span className="w-1.5 h-1.5 rounded-full" style={{ background: s.color }} />
       {s.label}
     </span>
   );
@@ -40,17 +49,22 @@ function formatDateTime(iso: string) {
   };
 }
 
-export function AuditLogTable({ transactions }: AuditLogTableProps) {
-  const [page, setPage] = useState(1);
+function unitLabel(unit: string) {
+  switch (unit) {
+    case "linear_ft": return "Lin. Ft";
+    case "sq_ft":     return "Sq. Ft";
+    case "pieces":    return "Pcs";
+    default:          return unit;
+  }
+}
 
-  const totalPages = Math.ceil(transactions.length / PAGE_SIZE);
-  const paged = transactions.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+export function AuditLogTable({ rows, loading = false }: AuditLogTableProps) {
+  const [page, setPage] = useState(1);
+  const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+  const paged = rows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
-    <div
-      className="card overflow-hidden"
-      style={{ borderColor: "var(--color-border)" }}
-    >
+    <div className="card overflow-hidden" style={{ borderColor: "var(--color-border)" }}>
       {/* Header */}
       <div
         className="flex items-center justify-between px-5 py-4"
@@ -64,9 +78,14 @@ export function AuditLogTable({ transactions }: AuditLogTableProps) {
             Audit Log
           </h3>
           <p className="text-xs" style={{ color: "var(--color-text-muted)" }}>
-            {transactions.length} transaction{transactions.length !== 1 ? "s" : ""} recorded
+            {rows.length} transaction{rows.length !== 1 ? "s" : ""} recorded
           </p>
         </div>
+        {loading && (
+          <span className="text-xs" style={{ color: "var(--color-text-muted)" }}>
+            Refreshing…
+          </span>
+        )}
       </div>
 
       {/* Table */}
@@ -78,7 +97,7 @@ export function AuditLogTable({ transactions }: AuditLogTableProps) {
                 (col) => (
                   <th
                     key={col}
-                    className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider"
+                    className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider whitespace-nowrap"
                     style={{ color: "var(--color-text-muted)" }}
                   >
                     {col}
@@ -92,24 +111,23 @@ export function AuditLogTable({ transactions }: AuditLogTableProps) {
               <tr>
                 <td
                   colSpan={5}
-                  className="px-5 py-10 text-center text-sm"
+                  className="px-5 py-12 text-center text-sm"
                   style={{ color: "var(--color-text-muted)" }}
                 >
-                  No transactions recorded yet.
+                  {loading ? "Loading transactions…" : "No transactions recorded yet."}
                 </td>
               </tr>
             ) : (
               paged.map((tx, i) => {
                 const { date, time } = formatDateTime(tx.timestamp);
+                const isInflow = tx.type === "RESTOCK" || (tx.type === "CORRECTION" && tx.quantityChanged >= 0);
+                const absQty = Math.abs(tx.quantityChanged);
+
                 return (
                   <tr
                     key={tx.id}
-                    className="transition-colors"
                     style={{
-                      borderBottom:
-                        i < paged.length - 1
-                          ? "1px solid var(--color-border)"
-                          : undefined,
+                      borderBottom: i < paged.length - 1 ? "1px solid var(--color-border)" : undefined,
                     }}
                     onMouseEnter={(e) =>
                       (e.currentTarget.style.background = "var(--color-surface-2)")
@@ -118,7 +136,7 @@ export function AuditLogTable({ transactions }: AuditLogTableProps) {
                       (e.currentTarget.style.background = "transparent")
                     }
                   >
-                    {/* Date/Time */}
+                    {/* Date / Time */}
                     <td className="px-5 py-3.5">
                       <span
                         className="text-sm font-medium block"
@@ -134,7 +152,7 @@ export function AuditLogTable({ transactions }: AuditLogTableProps) {
                       </span>
                     </td>
 
-                    {/* Action Type */}
+                    {/* Action badge */}
                     <td className="px-5 py-3.5">
                       <TypeBadge type={tx.type} />
                     </td>
@@ -147,22 +165,29 @@ export function AuditLogTable({ transactions }: AuditLogTableProps) {
                       {tx.pieces} pcs
                     </td>
 
-                    {/* Qty Impacted */}
-                    <td
-                      className="px-5 py-3.5 font-mono text-sm font-semibold"
-                      style={{
-                        color:
-                          tx.type === "RESTOCK"
+                    {/* Qty impacted — coloured signed value */}
+                    <td className="px-5 py-3.5">
+                      <span
+                        className="font-mono text-sm font-semibold"
+                        style={{
+                          color: isInflow
                             ? "var(--color-success)"
                             : tx.type === "SALE"
                             ? "var(--color-info)"
                             : tx.type === "WASTE_CUT"
                             ? "var(--color-danger)"
                             : "var(--color-warning)",
-                      }}
-                    >
-                      {tx.type === "RESTOCK" ? "+" : "-"}
-                      {tx.quantityImpacted} {tx.unit}
+                        }}
+                      >
+                        {isInflow ? "+" : "−"}
+                        {absQty.toLocaleString()}{" "}
+                        <span
+                          className="font-normal text-xs"
+                          style={{ color: "var(--color-text-muted)" }}
+                        >
+                          {unitLabel(tx.unit)}
+                        </span>
+                      </span>
                     </td>
 
                     {/* Notes */}
@@ -189,11 +214,8 @@ export function AuditLogTable({ transactions }: AuditLogTableProps) {
           className="flex items-center justify-between px-5 py-3"
           style={{ borderTop: "1px solid var(--color-border)" }}
         >
-          <span
-            className="text-xs"
-            style={{ color: "var(--color-text-muted)" }}
-          >
-            Page {page} of {totalPages}
+          <span className="text-xs" style={{ color: "var(--color-text-muted)" }}>
+            Page {page} of {totalPages} · {rows.length} total
           </span>
           <div className="flex gap-2">
             <button
@@ -203,8 +225,7 @@ export function AuditLogTable({ transactions }: AuditLogTableProps) {
               style={{
                 background: "var(--color-surface-2)",
                 border: "1px solid var(--color-border)",
-                color:
-                  page === 1 ? "var(--color-border-2)" : "var(--color-text-secondary)",
+                color: page === 1 ? "var(--color-border-2)" : "var(--color-text-secondary)",
                 cursor: page === 1 ? "not-allowed" : "pointer",
               }}
             >
@@ -217,10 +238,7 @@ export function AuditLogTable({ transactions }: AuditLogTableProps) {
               style={{
                 background: "var(--color-surface-2)",
                 border: "1px solid var(--color-border)",
-                color:
-                  page === totalPages
-                    ? "var(--color-border-2)"
-                    : "var(--color-text-secondary)",
+                color: page === totalPages ? "var(--color-border-2)" : "var(--color-text-secondary)",
                 cursor: page === totalPages ? "not-allowed" : "pointer",
               }}
             >
